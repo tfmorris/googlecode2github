@@ -78,7 +78,7 @@ def convert_file(proj_id, src_path, dst_dir):
         lines = []
         # Assume first row is a header (or should we assume the reverse?)
         if rows:
-            lines.append('|=''+|='.join(rows[0])+'|')
+            lines.append('|='+'|='.join(rows[0])+'|')
             for row in rows[1:]:
                 lines.append('|'.join(row))
             return '\n\n' + '\n'.join(lines)
