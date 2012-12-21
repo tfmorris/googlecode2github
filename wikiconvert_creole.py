@@ -66,23 +66,9 @@ def convert_file(proj_id, src_path, dst_dir):
      #   return sub_block(match,indent=False)
     text = re.compile(r'^`(.*?)^`', re.M|re.S).sub(r'##{{{\1}}}##', text) # monospace literal for Creole 
     
-    # Headings - No conversion needed for Creole. Markdown conversion below
-    #text = re.compile(r'^===(.*?)===\s*$', re.M).sub(lambda m: "### %s\n"%m.group(1).strip(), text)
-    #text = re.compile(r'^==(.*?)==\s*$', re.M).sub(lambda m: "## %s\n"%m.group(1).strip(), text)
-    #text = re.compile(r'^=(.*?)=\s*$', re.M).sub(lambda m: "# %s\n"%m.group(1).strip(), text)
+    # Headings - No conversion needed for Creole. 
 
     # Tables
-    def sub_table_html(m):
-        rows = []
-        for line in m.group(0).splitlines(False):
-            if not line.strip():
-                continue
-            rows.append(list(c.strip() for c in line.split("||")[1:-1]))
-        lines = ['<table>']
-        for row in rows:
-            lines.append('  <tr>%s</tr>' % ''.join('<td>%s</td>' % c for c in row))
-        lines.append('</table>')
-        return '\n\n' + '\n'.join(lines)
     def sub_table_creole(m):
         rows = []
         for line in m.group(0).splitlines(False):
@@ -92,16 +78,15 @@ def convert_file(proj_id, src_path, dst_dir):
         lines = []
         # Assume first row is a header (or should we assume the reverse?)
         if rows:
-            lines.append('|='.join(rows[0])[:-1] )# skip trailing equal sign
+            lines.append('|=''+|='.join(rows[0])+'|')
             for row in rows[1:]:
                 lines.append('|'.join(row))
             return '\n\n' + '\n'.join(lines)
-#    text = re.compile(r'\n(\n^\|\|(.*?\|\|)+$)+', re.M).sub(sub_table, text)
     text = re.compile(r'\n(\n^\|\|(.*?\|\|)+$)+', re.M).sub(sub_table_creole, text)
 
     # Lists (doesn't handle nested lists).
     # TODO: leave bullet marker unchanged for *, -, +
-    text = re.compile(r'^[ \t]+\*[ \t]+(.*?)[ \t]*$', re.M).sub(r'* \1', text)
+#    text = re.compile(r'^[ \t]+\*[ \t]+(.*?)[ \t]*$', re.M).sub(r'* \1', text)
     text = re.compile(r'^[ \t]+#[ \t]+(.*?)[ \t]*$', re.M).sub(r'1. \1', text)
 
     # wiki links. - Creole & Markdown are the same - no change required to conversion
@@ -120,7 +105,7 @@ def convert_file(proj_id, src_path, dst_dir):
     # Links
     def sub_link(m):
         # s = "[%s](%s)" % (m.group(2), m.group(1)) # Markdown
-        s = "[[%s|%s]]" % (m.group(1), m.group(2)) # Creole
+        s = "[[%s|%s]]" % (m.group(2), m.group(1)) # Creole
         hash = md5(s.encode('utf8')).hexdigest()
         s_from_hash[hash] = s
         return hash
@@ -135,6 +120,10 @@ def convert_file(proj_id, src_path, dst_dir):
     # TODO: Construct Google Code -> Github issue lookup map
     text = re.compile(r'(?<!\[)(issue (\d+))(?!\])').sub(
         r'[\1](https://github.com/%s/issues#issue/\2)' % proj_id, text)
+
+    # TODO - convert google groups references
+    # from http://groups.google.com/group/google-refine/
+    # to http://groups.google.com/group/openrefine
 
     # Restore hashed-out blocks.
     for hash, s in s_from_hash.items():
