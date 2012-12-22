@@ -86,7 +86,7 @@ def convert_file(proj_id, src_path, dst_dir):
 
     # Lists (doesn't handle nested lists).
     # TODO: leave bullet marker unchanged for *, -, +
-#    text = re.compile(r'^[ \t]+\*[ \t]+(.*?)[ \t]*$', re.M).sub(r'* \1', text)
+    text = re.compile(r'^[ \t]+\*[ \t]+(.*?)[ \t]*$', re.M).sub(r' \1', text)
     text = re.compile(r'^[ \t]+#[ \t]+(.*?)[ \t]*$', re.M).sub(r'1. \1', text)
 
     # wiki links. - Creole & Markdown are the same - no change required to conversion
@@ -125,10 +125,14 @@ def convert_file(proj_id, src_path, dst_dir):
     # from http://groups.google.com/group/google-refine/
     # to http://groups.google.com/group/openrefine
 
-    # Restore hashed-out blocks.
+    # TODO: replace Google Refine with OpenRefine everywyere
+
+      # Restore hashed-out blocks.
     for hash, s in s_from_hash.items():
         text = text.replace(hash, s)
 
+    # TODO remove or replace #summary header pragmas
+  
     # Add summary.
     if "summary" in meta:
         text = ("# %s\n\n" % meta["summary"]) + text
