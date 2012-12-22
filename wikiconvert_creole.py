@@ -80,7 +80,7 @@ def convert_file(proj_id, src_path, dst_dir):
         if rows:
             lines.append('|='+'|='.join(rows[0])+'|')
             for row in rows[1:]:
-                lines.append('|'.join(row))
+                lines.append('|'+'|'.join(row)+'|')
             return '\n\n' + '\n'.join(lines)
     text = re.compile(r'\n(\n^\|\|(.*?\|\|)+$)+', re.M).sub(sub_table_creole, text)
 
