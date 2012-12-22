@@ -118,7 +118,7 @@ def convert_file(proj_id, src_path, dst_dir):
         s_from_hash[hash] = s
         return hash
     # NOTE: this only matches http & ftp links currently
-    text = re.compile(r'(?<!\[)\[((http|ftp):[^\s]+)\s+(.*?)\](?!\])', re.S).sub(sub_link, text)
+    text = re.compile(r'(?<!\[)\[((?:http|ftp):[^\s]+)\s+(.*?)\](?!\])', re.S).sub(sub_link, text)
 
     # Auto-linking "issue \d+"
     # TODO: Construct Google Code -> Github issue lookup map
@@ -136,11 +136,14 @@ def convert_file(proj_id, src_path, dst_dir):
     if "summary" in meta:
         text = ("//%s//\n\n" % meta["summary"]) + text
 
-    # Project specific replacements for naming, mailing lists, & issues
+    # Project specific replacements for naming, mailing lists, & code
     text = text.replace('Google Refine','OpenRefine')
-    text = text.replace('http://groups.google.com/group/google-refine',
-                 'http://groups.google.com/group/openrefine')
-
+    text = text.replace(
+                    'http://groups.google.com/group/google-refine',
+                     'http://groups.google.com/group/openrefine')
+    text = text.replace(
+                        'code.google.com/p/google-refine/source/browse/trunk/',
+                        'github.com/OpenRefine/OpenRefine/blob/master/')
 
     base = splitext(basename(src_path))[0]
     gh_page_name = _gh_page_name_from_gc_page_name(base)
