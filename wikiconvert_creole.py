@@ -54,7 +54,8 @@ def convert_file(proj_id, src_path, dst_dir):
     def sub_block(match,indent=True):
         pre = match.group(1)
         hash = md5(pre.encode('utf8')).hexdigest()
-        s_from_hash[hash] = _indent(pre) if indent else pre
+        # Creole uses braces, not indentation for code blocks
+        s_from_hash[hash] = "{{{"+pre+"}}}" if indent else pre
         return hash
         
     def sub_pre_block(match):
@@ -127,11 +128,20 @@ def convert_file(proj_id, src_path, dst_dir):
     # Restore hashed-out blocks.
     for hash, s in s_from_hash.items():
         if text == text.replace(hash,s):
-            print 'Contained = ',text.find(hash)
             print 'Failed to replace %s with %s' % (hash,s)
         text = text.replace(hash, s)
+
+    base = splitext(basename(src_path))[0]
+
+    # Prepend warning block for manual review
+    text = '----\n**NOTE**: This page was automatically converted from the ' \
+           + ('[[old page|http://code.google.com/p/google-refine/wiki/%s]] ' % base) \
+           + ' at Google Code and has not been manually reviewed.  Please compare it to  ' \
+           + ('[[the original|http://code.google.com/p/google-refine/wiki/%s]] ' % base) \
+           + ', correct any errors or omissions, then remove this warning block.\n----\n\n\n' \
+           +text
  
-    #  Prepend summary.(not sure whether h3 or italics is best option here)
+    #  Prepend summary
     if "summary" in meta:
         text = ("//%s//\n\n" % meta["summary"]) + text
 
@@ -144,9 +154,7 @@ def convert_file(proj_id, src_path, dst_dir):
                         'code.google.com/p/google-refine/source/browse/trunk/',
                         'github.com/OpenRefine/OpenRefine/blob/master/')
 
-    base = splitext(basename(src_path))[0]
     gh_page_name = _gh_page_name_from_gc_page_name(base)
-#    dst_path = join(dst_dir, gh_page_name+".md")
     dst_path = join(dst_dir, gh_page_name+".creole")
     if not exists(dst_path) or codecs.open(dst_path, 'r', 'utf-8').read() != text:
         codecs.open(dst_path, 'w', 'utf-8').write(text)
