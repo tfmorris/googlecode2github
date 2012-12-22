@@ -84,16 +84,17 @@ def convert_file(proj_id, src_path, dst_dir):
             return '\n\n' + '\n'.join(lines)
     text = re.compile(r'\n(\n^\|\|(.*?\|\|)+$)+', re.M).sub(sub_table_creole, text)
 
+    # Lists (doesn't handle nested lists - flattends structure).
+    text = re.compile(r'^[ \t]+\*[ \t]+(.*?)$', re.M).sub(r'{^} \1', text) # temp marker to avoid bold processing
+    text = re.compile(r'^[ \t]+#[ \t]+(.*?)[ \t]*$', re.M).sub(r'1. \1', text)
 
     # Italics, bold. - same for both Markdown & Creole
     # in*ter*bold: (?<=\w)(\*\w+?\*)(?=\w)
     text = re.compile(r'(?<![*\w])\*([^*]+?)\*(?![*\w])', re.S).sub(r'**\1**', text)
     text = re.compile(r'(?<![_\w])_([^_]+?)_(?![_\w])', re.S).sub(r'*\1*', text)
-    
-    # Lists (doesn't handle nested lists).
-    # TODO: leave bullet marker unchanged for *, -, +
-    text = re.compile(r'^  \*[ \t]+(.*?)[ \t]*$', re.M).sub(r'* \1', text)
-    text = re.compile(r'^[ \t]+#[ \t]+(.*?)[ \t]*$', re.M).sub(r'1. \1', text)
+
+    # Swap our temporary bulllet marker back out
+    text = text.replace('{^}','*')
 
     # wiki links. - Creole & Markdown are the same - no change required to conversion
     def sub_wikilink(m):
