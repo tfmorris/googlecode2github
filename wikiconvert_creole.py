@@ -60,13 +60,12 @@ def convert_file(proj_id, src_path, dst_dir):
     def sub_pre_block(match):
         return sub_block(match,indent=True)
 
-    # TODO not sure newline is correct after opening braces {{{code}}}
-    text = re.compile(r'^{{{\n(.*?)^}}}', re.M|re.S).sub(sub_pre_block, text)
+    text = re.compile(r'^{{{(.*?)}}}', re.M|re.S).sub(sub_pre_block, text)
 
     #  Pull out `backtick` code quotes 
     #def sub_code(match)
      #   return sub_block(match,indent=False)
-    text = re.compile(r'^`(.*?)^`', re.M|re.S).sub(r'##{{{\1}}}##', text) # monospace literal for Creole 
+    text = re.compile(r'`(.*?)`', re.M|re.S).sub(r'##{{{\1}}}##', text) # monospace literal for Creole 
     
     # Headings - No conversion needed for Creole. 
 
@@ -118,25 +117,30 @@ def convert_file(proj_id, src_path, dst_dir):
         hash = md5(s.encode('utf8')).hexdigest()
         s_from_hash[hash] = s
         return hash
-    text = re.compile(r'(?<!\[)\[([^\s]+)\s+(.*?)\](?!\])', re.S).sub(sub_link, text)
+    # NOTE: this only matches http & ftp links currently
+    text = re.compile(r'(?<!\[)\[((http|ftp):[^\s]+)\s+(.*?)\](?!\])', re.S).sub(sub_link, text)
 
     # Auto-linking "issue \d+"
     # TODO: Construct Google Code -> Github issue lookup map
     text = re.compile(r'(?<!\[)(issue (\d+))(?!\])').sub(
         r'[\1](https://github.com/%s/issues#issue/\2)' % proj_id, text)
 
-    # Project specific replacements for naming, mailing lists, & issues
-    text = text.replace('Google Refine','OpenRefine')
-    text = text.replace('http://groups.google.com/group/google-refine',
-                 'http://groups.google.com/group/openrefine')
-
     # Restore hashed-out blocks.
     for hash, s in s_from_hash.items():
+        if text == text.replace(hash,s):
+            print 'Contained = ',text.find(hash)
+            print 'Failed to replace %s with %s' % (hash,s)
         text = text.replace(hash, s)
  
     #  Prepend summary.(not sure whether h3 or italics is best option here)
     if "summary" in meta:
         text = ("//%s//\n\n" % meta["summary"]) + text
+
+    # Project specific replacements for naming, mailing lists, & issues
+    text = text.replace('Google Refine','OpenRefine')
+    text = text.replace('http://groups.google.com/group/google-refine',
+                 'http://groups.google.com/group/openrefine')
+
 
     base = splitext(basename(src_path))[0]
     gh_page_name = _gh_page_name_from_gc_page_name(base)
