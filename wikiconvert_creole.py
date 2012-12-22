@@ -84,9 +84,15 @@ def convert_file(proj_id, src_path, dst_dir):
             return '\n\n' + '\n'.join(lines)
     text = re.compile(r'\n(\n^\|\|(.*?\|\|)+$)+', re.M).sub(sub_table_creole, text)
 
+
+    # Italics, bold. - same for both Markdown & Creole
+    # in*ter*bold: (?<=\w)(\*\w+?\*)(?=\w)
+    text = re.compile(r'(?<![*\w])\*([^*]+?)\*(?![*\w])', re.S).sub(r'**\1**', text)
+    text = re.compile(r'(?<![_\w])_([^_]+?)_(?![_\w])', re.S).sub(r'*\1*', text)
+    
     # Lists (doesn't handle nested lists).
     # TODO: leave bullet marker unchanged for *, -, +
-    text = re.compile(r'^[ \t]+\*[ \t]+(.*?)[ \t]*$', re.M).sub(r' \1', text)
+    text = re.compile(r'^  \*[ \t]+(.*?)[ \t]*$', re.M).sub(r'* \1', text)
     text = re.compile(r'^[ \t]+#[ \t]+(.*?)[ \t]*$', re.M).sub(r'1. \1', text)
 
     # wiki links. - Creole & Markdown are the same - no change required to conversion
@@ -111,10 +117,6 @@ def convert_file(proj_id, src_path, dst_dir):
         return hash
     text = re.compile(r'(?<!\[)\[([^\s]+)\s+(.*?)\](?!\])', re.S).sub(sub_link, text)
 
-    # Italics, bold. - same for both Markdown & Creole
-    # in*ter*bold: (?<=\w)(\*\w+?\*)(?=\w)
-    text = re.compile(r'(?<![*\w])\*([^*]+?)\*(?![*\w])', re.S).sub(r'**\1**', text)
-    text = re.compile(r'(?<![_\w])_([^_]+?)_(?![_\w])', re.S).sub(r'*\1*', text)
 
     # Auto-linking "issue \d+"
     # TODO: Construct Google Code -> Github issue lookup map
