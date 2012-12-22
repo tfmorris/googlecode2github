@@ -29,7 +29,7 @@ def convert_dir(proj_id, src_dir, dst_dir):
     else:
         for f in glob(join(src_dir, "*.wiki")):
             convert_file(proj_id, f, dst_dir)
-
+    
 def convert_file(proj_id, src_path, dst_dir):
     src = codecs.open(src_path, 'r', 'utf-8').read()
     meta_lines = []
@@ -56,8 +56,10 @@ def convert_file(proj_id, src_path, dst_dir):
         hash = md5(pre.encode('utf8')).hexdigest()
         s_from_hash[hash] = _indent(pre) if indent else pre
         return hash
+        
     def sub_pre_block(match):
         return sub_block(match,indent=True)
+
     # TODO not sure newline is correct after opening braces {{{code}}}
     text = re.compile(r'^{{{\n(.*?)^}}}', re.M|re.S).sub(sub_pre_block, text)
 
@@ -84,9 +86,9 @@ def convert_file(proj_id, src_path, dst_dir):
             return '\n\n' + '\n'.join(lines)
     text = re.compile(r'\n(\n^\|\|(.*?\|\|)+$)+', re.M).sub(sub_table_creole, text)
 
-    # Lists (doesn't handle nested lists - flattends structure).
+    # Lists (doesn't handle nested lists - flattens structure).
     text = re.compile(r'^[ \t]+\*[ \t]+(.*?)$', re.M).sub(r'{^} \1', text) # temp marker to avoid bold processing
-    text = re.compile(r'^[ \t]+#[ \t]+(.*?)[ \t]*$', re.M).sub(r'1. \1', text)
+    text = re.compile(r'^[ \t]+#[ \t]+(.*?)$', re.M).sub(r'1. \1', text)
 
     # Italics, bold. - same for both Markdown & Creole
     # in*ter*bold: (?<=\w)(\*\w+?\*)(?=\w)
@@ -118,27 +120,23 @@ def convert_file(proj_id, src_path, dst_dir):
         return hash
     text = re.compile(r'(?<!\[)\[([^\s]+)\s+(.*?)\](?!\])', re.S).sub(sub_link, text)
 
-
     # Auto-linking "issue \d+"
     # TODO: Construct Google Code -> Github issue lookup map
     text = re.compile(r'(?<!\[)(issue (\d+))(?!\])').sub(
         r'[\1](https://github.com/%s/issues#issue/\2)' % proj_id, text)
 
-    # TODO - convert google groups references
-    # from http://groups.google.com/group/google-refine/
-    # to http://groups.google.com/group/openrefine
+    # Project specific replacements for naming, mailing lists, & issues
+    text = text.replace('Google Refine','OpenRefine')
+    text = text.replace('http://groups.google.com/group/google-refine',
+                 'http://groups.google.com/group/openrefine')
 
-    # TODO: replace Google Refine with OpenRefine everywyere
-
-      # Restore hashed-out blocks.
+    # Restore hashed-out blocks.
     for hash, s in s_from_hash.items():
         text = text.replace(hash, s)
-
-    # TODO remove or replace #summary header pragmas
-  
-    # Add summary.
+ 
+    #  Prepend summary.(not sure whether h3 or italics is best option here)
     if "summary" in meta:
-        text = ("# %s\n\n" % meta["summary"]) + text
+        text = ("//%s//\n\n" % meta["summary"]) + text
 
     base = splitext(basename(src_path))[0]
     gh_page_name = _gh_page_name_from_gc_page_name(base)
@@ -156,10 +154,11 @@ def _indent(text):
 
 def _gh_page_name_from_gc_page_name(gc):
     """Github (gh) Wiki page name from Google Code (gc) Wiki page name."""
-    # FIXME: fails on all uppercase / all lowercase names (e.g. FAQ)
-    gh = re.sub(r'([A-Z][a-z]+)', r'-\1', gc)[1:]
+    if re.match(r'[A-Z][a-z]{2,}',gc):
+        gh = re.sub(r'([A-Z][a-z]+)', r'-\1', gc)[1:]
+    else:
+        gh = gc
     return gh
-
 
 #---- mainline
 
