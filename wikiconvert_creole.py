@@ -65,7 +65,7 @@ def convert_file(proj_id, src_path, dst_dir):
     #  Pull out `backtick` code quotes 
     #def sub_code(match)
      #   return sub_block(match,indent=False)
-    text = re.compile(r'`(.*?)`', re.M|re.S).sub(r'##{{{\1}}}##', text) # monospace literal for Creole 
+    text = re.compile(r'`(.*?)`', re.M|re.S).sub(r'{{{\1}}}', text) # monospace literal for Creole 
     
     # Headings - No conversion needed for Creole. 
 
@@ -97,12 +97,11 @@ def convert_file(proj_id, src_path, dst_dir):
     # Swap our temporary bulllet marker back out
     text = text.replace('{^}','*')
 
-    # wiki links. - Creole & Markdown are the same - no change required to conversion
+    # wiki links.
     def sub_wikilink(m):
         gh_page_name = _gh_page_name_from_gc_page_name(m.group(1)).replace('-', ' ')
         if m.group(2):
-            s = "[[%s|%s]]" % (gh_page_name, m.group(2))
-            pass
+            s = "[[%s|%s]]" % ( m.group(2),gh_page_name)
         else:
             s = "[[%s]]" % gh_page_name
         hash = md5(s.encode('utf8')).hexdigest()
@@ -139,8 +138,8 @@ def convert_file(proj_id, src_path, dst_dir):
     # Project specific replacements for naming, mailing lists, & code
     text = text.replace('Google Refine','OpenRefine')
     text = text.replace(
-                    'http://groups.google.com/group/google-refine',
-                     'http://groups.google.com/group/openrefine')
+                    '://groups.google.com/group/google-refine',
+                     '://groups.google.com/group/openrefine')
     text = text.replace(
                         'code.google.com/p/google-refine/source/browse/trunk/',
                         'github.com/OpenRefine/OpenRefine/blob/master/')
