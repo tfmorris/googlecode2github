@@ -88,7 +88,7 @@ def convert_file(proj_id, src_path, dst_dir):
 
     # Lists (doesn't handle nested lists - flattens structure).
     text = re.compile(r'^[ \t]+\*[ \t]+(.*?)$', re.M).sub(r'{^} \1', text) # temp marker to avoid bold processing
-    text = re.compile(r'^[ \t]+#[ \t]+(.*?)$', re.M).sub(r'1. \1', text)
+    text = re.compile(r'^[ \t]+#[ \t]+(.*?)$', re.M).sub(r'# \1', text)
 
     # Italics, bold. - same for both Markdown & Creole
     # in*ter*bold: (?<=\w)(\*\w+?\*)(?=\w)
