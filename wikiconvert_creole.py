@@ -168,8 +168,9 @@ def _indent(text):
 
 def _gh_page_name_from_gc_page_name(gc):
     """Github (gh) Wiki page name from Google Code (gc) Wiki page name."""
-    if re.match(r'[A-Z][a-z]{2,}',gc):
-        gh = re.sub(r'([A-Z][a-z]+)', r'-\1', gc)[1:]
+    # Note: We can't handle both FetchingURLsFromWebServices & GRELFunctions
+    if re.match(r'[A-Z]+[a-z]{2,}',gc):
+        gh = re.sub(r'([A-Z]+[a-z]+)', r'-\1', gc)[1:]
     else:
         gh = gc
     return gh
